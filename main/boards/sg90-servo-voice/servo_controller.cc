@@ -92,6 +92,102 @@ bool ServoController::Initialize() {
     return true;
 }
 
+void ServoController::InitializeTools() {
+    auto& mcp_server = McpServer::GetInstance();
+    ESP_LOGI(TAG, "开始注册舵机MCP工具...");
+
+    // 设置舵机角度
+    mcp_server.AddTool("self.servo.set_angle",
+                       "设置SG90舵机到指定角度。angle: 目标角度(0-180度)",
+                       PropertyList({Property("angle", kPropertyTypeInteger, 90, 0, 180)}),
+                       [this](const PropertyList& properties) -> ReturnValue {
+                           int angle = properties["angle"].value<int>();
+                           SetAngle(angle);
+                           return "舵机设置到 " + std::to_string(angle) + " 度";
+                       });
+
+    // 顺时针旋转
+    mcp_server.AddTool("self.servo.rotate_clockwise",
+                       "顺时针旋转SG90舵机指定角度。degrees: 旋转角度(1-180度)",
+                       PropertyList({Property("degrees", kPropertyTypeInteger, 30, 1, 180)}),
+                       [this](const PropertyList& properties) -> ReturnValue {
+                           int degrees = properties["degrees"].value<int>();
+                           RotateClockwise(degrees);
+                           return "舵机顺时针旋转 " + std::to_string(degrees) + " 度";
+                       });
+
+    // 逆时针旋转
+    mcp_server.AddTool("self.servo.rotate_counterclockwise",
+                       "逆时针旋转SG90舵机指定角度。degrees: 旋转角度(1-180度)",
+                       PropertyList({Property("degrees", kPropertyTypeInteger, 30, 1, 180)}),
+                       [this](const PropertyList& properties) -> ReturnValue {
+                           int degrees = properties["degrees"].value<int>();
+                           RotateCounterclockwise(degrees);
+                           return "舵机逆时针旋转 " + std::to_string(degrees) + " 度";
+                       });
+
+    // 获取当前位置
+    mcp_server.AddTool("self.servo.get_position",
+                       "获取SG90舵机当前角度位置",
+                       PropertyList(),
+                       [this](const PropertyList& properties) -> ReturnValue {
+                           int angle = GetCurrentAngle();
+                           return "当前舵机角度: " + std::to_string(angle) + " 度";
+                       });
+
+    // 扫描模式
+    mcp_server.AddTool("self.servo.sweep",
+                       "SG90舵机扫描模式，在指定角度范围内来回摆动。"
+                       "min_angle: 最小角度(0-179度); max_angle: 最大角度(1-180度); "
+                       "speed: 摆动速度，毫秒(100-5000ms)",
+                       PropertyList({Property("min_angle", kPropertyTypeInteger, 0, 0, 179),
+                                     Property("max_angle", kPropertyTypeInteger, 180, 1, 180),
+                                     Property("speed", kPropertyTypeInteger, 1000, 100, 5000)}),
+                       [this](const PropertyList& properties) -> ReturnValue {
+                           int min_angle = properties["min_angle"].value<int>();
+                           int max_angle = properties["max_angle"].value<int>();
+                           int speed = properties["speed"].value<int>();
+                           SweepBetween(min_angle, max_angle, speed);
+                           return "开始扫描模式: " + std::to_string(min_angle) + "° - " +
+                                  std::to_string(max_angle) + "°";
+                       });
+
+    // 停止舵机
+    mcp_server.AddTool("self.servo.stop",
+                       "立即停止SG90舵机运动",
+                       PropertyList(),
+                       [this](const PropertyList& properties) -> ReturnValue {
+                           Stop();
+                           return "舵机已停止";
+                       });
+
+    // 复位到中心位置
+    mcp_server.AddTool("self.servo.reset",
+                       "将SG90舵机复位到中心位置(90度)",
+                       PropertyList(),
+                       [this](const PropertyList& properties) -> ReturnValue {
+                           Reset();
+                           return "舵机已复位到中心位置(90度)";
+                       });
+
+    // 获取舵机状态
+    mcp_server.AddTool("self.servo.get_status",
+                       "获取SG90舵机当前状态",
+                       PropertyList(),
+                       [this](const PropertyList& properties) -> ReturnValue {
+                           int angle = GetCurrentAngle();
+                           bool moving = IsMoving();
+                           bool sweeping = IsSweeping();
+
+                           std::string status = "{\"angle\":" + std::to_string(angle) +
+                                              ",\"moving\":" + (moving ? "true" : "false") +
+                                              ",\"sweeping\":" + (sweeping ? "true" : "false") + "}";
+                           return status;
+                       });
+
+    ESP_LOGI(TAG, "舵机MCP工具注册完成");
+}
+
 void ServoController::SetAngle(int angle) {
     if (!IsValidAngle(angle)) {
         ESP_LOGW(TAG, "无效角度: %d，将限制在有效范围内", angle);

@@ -9,6 +9,7 @@
 #include <freertos/queue.h>
 #include <functional>
 #include "config.h"
+#include "mcp_server.h"
 
 class ServoController {
 public:
@@ -17,6 +18,7 @@ public:
 
     // 基本控制方法
     bool Initialize();
+    void InitializeTools();  // 初始化MCP工具
     void SetAngle(int angle);
     int GetCurrentAngle() const { return current_angle_; }
     
