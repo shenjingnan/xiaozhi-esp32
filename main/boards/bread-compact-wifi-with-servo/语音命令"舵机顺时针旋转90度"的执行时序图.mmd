@@ -1,0 +1,67 @@
+sequenceDiagram
+    participant User as 用户
+    participant ASR as 语音识别系统
+    participant AI as AI助手
+    participant MCP as McpServer
+    participant Tool as MCP工具回调
+    participant SC as ServoController
+    participant Queue as 命令队列
+    participant Task as ServoTask
+    participant LEDC as ESP32 LEDC
+    participant Servo as SG90舵机
+
+    User->>ASR: 语音："舵机顺时针旋转90度"
+    ASR->>AI: 文本："舵机顺时针旋转90度"
+    
+    Note over AI: 解析命令，识别需要调用<br/>self.servo.rotate_clockwise工具
+    
+    AI->>MCP: MCP调用请求<br/>{"method": "tools/call",<br/>"params": {"name": "self.servo.rotate_clockwise",<br/>"arguments": {"degrees": 90}}}
+    
+    MCP->>MCP: ParseMessage()解析消息
+    MCP->>MCP: DoToolCall()处理工具调用
+    MCP->>Tool: 创建线程执行工具回调
+    
+    Tool->>SC: RotateClockwise(90)
+    
+    Note over SC: 验证参数degrees > 0
+    
+    SC->>SC: 创建ServoCommand<br/>{CMD_ROTATE_CW, 90, 0, 0}
+    SC->>Queue: xQueueSend(command_queue_, &cmd)
+    
+    Note over Queue: 命令进入队列等待处理
+    
+    Queue->>Task: xQueueReceive()接收命令
+    Task->>Task: ProcessCommands()处理命令
+    
+    Note over Task: switch(cmd.type)<br/>case CMD_ROTATE_CW
+    
+    Task->>Task: ExecuteRotate(90, true)
+    
+    Note over Task: 计算目标角度<br/>target = current_angle_ + 90<br/>target = ConstrainAngle(target)
+    
+    Task->>Task: SmoothMoveTo(target, 500ms)
+    
+    Note over Task: 平滑移动算法<br/>分步骤移动到目标位置
+    
+    loop 多次调用直到到达目标角度
+        Task->>Task: WriteAngle(step_angle)
+        Task->>Task: ConstrainAngle(step_angle)
+        Task->>Task: AngleToCompare(step_angle)
+        
+        Note over Task: 将角度转换为PWM占空比<br/>pulse_width = 0.5ms + (angle/180) * 2ms
+        
+        Task->>LEDC: ledc_set_duty()设置占空比
+        Task->>LEDC: ledc_update_duty()更新输出
+        LEDC->>Servo: PWM信号控制舵机旋转
+        
+        Note over Task: vTaskDelay()延迟等待<br/>实现平滑移动效果
+    end
+    
+    Note over Task: 移动完成，更新状态<br/>is_moving_ = false
+    
+    Task->>Tool: 执行完成
+    Tool->>MCP: 返回成功消息<br/>"舵机顺时针旋转 90 度"
+    MCP->>AI: MCP响应<br/>{"result": {"content": [{"type": "text",<br/>"text": "舵机顺时针旋转 90 度"}]}}
+    AI->>User: "舵机已顺时针旋转90度"
+    
+    Note over Servo: 舵机完成90度顺时针旋转

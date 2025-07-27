@@ -1,0 +1,72 @@
+flowchart TD
+    %% 构造和初始化
+    Constructor[ServoController构造函数] --> Initialize[Initialize初始化]
+    Initialize --> WriteAngle[WriteAngle写入角度]
+    Initialize --> InitializeTools[InitializeTools注册MCP工具]
+    
+    %% 公共接口方法
+    SetAngle[SetAngle设置角度] --> IsValidAngle[IsValidAngle验证角度]
+    SetAngle --> ConstrainAngle[ConstrainAngle限制角度]
+    SetAngle --> QueueSend1[发送CMD_SET_ANGLE到队列]
+    
+    RotateClockwise[RotateClockwise顺时针旋转] --> QueueSend2[发送CMD_ROTATE_CW到队列]
+    RotateCounterclockwise[RotateCounterclockwise逆时针旋转] --> QueueSend3[发送CMD_ROTATE_CCW到队列]
+    
+    SweepBetween[SweepBetween扫描模式] --> IsValidAngle
+    SweepBetween --> QueueSend4[发送CMD_SWEEP到队列]
+    
+    Stop[Stop停止] --> QueueSend5[发送CMD_STOP到队列]
+    Reset[Reset复位] --> QueueSend6[发送CMD_RESET到队列]
+    
+    %% 任务处理流程
+    ServoTask[ServoTask静态任务函数] --> ProcessCommands[ProcessCommands处理命令]
+    ProcessCommands --> ExecuteSetAngle[ExecuteSetAngle执行设置角度]
+    ProcessCommands --> ExecuteRotate[ExecuteRotate执行旋转]
+    ProcessCommands --> ExecuteSweep[ExecuteSweep执行扫描]
+    
+    %% 执行方法
+    ExecuteSetAngle --> SmoothMoveTo[SmoothMoveTo平滑移动]
+    ExecuteRotate --> ConstrainAngle
+    ExecuteRotate --> SmoothMoveTo
+    ExecuteSweep --> SmoothMoveTo
+    
+    %% 底层硬件控制
+    SmoothMoveTo --> ConstrainAngle
+    SmoothMoveTo --> WriteAngle
+    WriteAngle --> ConstrainAngle
+    WriteAngle --> AngleToCompare[AngleToCompare角度转PWM]
+    WriteAngle --> LEDC_API[ESP32 LEDC API]
+    
+    %% MCP工具注册
+    InitializeTools --> McpServer[McpServer::GetInstance]
+    InitializeTools --> SetAngle
+    InitializeTools --> RotateClockwise
+    InitializeTools --> RotateCounterclockwise
+    InitializeTools --> SweepBetween
+    InitializeTools --> Stop
+    InitializeTools --> Reset
+    InitializeTools --> GetCurrentAngle[GetCurrentAngle获取当前角度]
+    InitializeTools --> IsMoving[IsMoving是否移动中]
+    InitializeTools --> IsSweeping[IsSweeping是否扫描中]
+    
+    %% 队列连接到处理
+    QueueSend1 -.-> ProcessCommands
+    QueueSend2 -.-> ProcessCommands
+    QueueSend3 -.-> ProcessCommands
+    QueueSend4 -.-> ProcessCommands
+    QueueSend5 -.-> ProcessCommands
+    QueueSend6 -.-> ProcessCommands
+    
+    %% 外部依赖
+    LEDC_API --> Hardware[SG90舵机硬件]
+    
+    %% 样式定义
+    classDef publicMethod fill:#e1f5fe
+    classDef privateMethod fill:#f3e5f5
+    classDef hardware fill:#ffecb3
+    classDef external fill:#e8f5e8
+    
+    class SetAngle,RotateClockwise,RotateCounterclockwise,SweepBetween,Stop,Reset,GetCurrentAngle,IsMoving,IsSweeping publicMethod
+    class WriteAngle,AngleToCompare,IsValidAngle,ConstrainAngle,ProcessCommands,ExecuteSetAngle,ExecuteRotate,ExecuteSweep,SmoothMoveTo privateMethod
+    class Hardware hardware
+    class McpServer,LEDC_API external
