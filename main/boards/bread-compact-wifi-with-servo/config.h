@@ -68,6 +68,6 @@
 #define SERVO_MAX_SPEED_DEGREE_PER_SEC 180    // 最大转速限制
 
 // 板子版本信息
-#define SG90_SERVO_VOICE_VERSION "1.0.0"
+#define BREAD_COMPACT_WIFI_WITH_SERVO_VERSION "1.0.0"
 
 #endif // _BOARD_CONFIG_H_

@@ -20,12 +20,12 @@
 #include <esp_lcd_panel_sh1106.h>
 #endif
 
-#define TAG "SG90ServoVoice"
+#define TAG "BreadCompactWifiWithServo"
 
 LV_FONT_DECLARE(font_puhui_14_1);
 LV_FONT_DECLARE(font_awesome_14_1);
 
-class SG90ServoVoiceBoard : public WifiBoard {
+class BreadCompactWifiWithServoBoard : public WifiBoard {
 private:
     i2c_master_bus_handle_t display_i2c_bus_;
     esp_lcd_panel_io_handle_t panel_io_ = nullptr;
@@ -183,7 +183,7 @@ private:
     }
 
 public:
-    SG90ServoVoiceBoard() :
+    BreadCompactWifiWithServoBoard() :
         boot_button_(BOOT_BUTTON_GPIO),
         touch_button_(TOUCH_BUTTON_GPIO),
         volume_up_button_(VOLUME_UP_BUTTON_GPIO),
@@ -196,7 +196,7 @@ public:
         InitializeTools();
     }
 
-    virtual ~SG90ServoVoiceBoard()
+    virtual ~BreadCompactWifiWithServoBoard()
     {
         if (servo_controller_)
         {
@@ -225,4 +225,4 @@ public:
     }
 };
 
-DECLARE_BOARD(SG90ServoVoiceBoard);
+DECLARE_BOARD(BreadCompactWifiWithServoBoard);

@@ -1,8 +1,8 @@
-# SG90 舵机语音控制板
+# 面包板紧凑型WiFi舵机控制板
 
 ## 概述
 
-这是一个小智语音控制 SG90 的示例代码，支持通过语音指令控制舵机的角度和运动。
+这是一个基于面包板紧凑型WiFi设计的舵机控制板，支持通过语音指令控制SG90舵机的角度和运动。
 
 ## 硬件配置
 
@@ -50,10 +50,10 @@ source /path/to/esp-idf/export.sh
 **第二步：编译固件**:
 
 ```bash
-python scripts/release.py sg90-servo-voice
+python scripts/release.py bread-compact-wifi-with-servo
 ```
 
-提示：生成的固件文件在: `releases/v1.8.1_sg90-servo-voice.zip`
+提示：生成的固件文件在: `releases/v1.8.1_bread-compact-wifi-with-servo.zip`
 
 ### 方式二：手动编译和烧录
 
@@ -74,7 +74,7 @@ idf.py set-target esp32s3
 ```bash
 idf.py menuconfig
 
-# 然后依次选择：Xiaozhi Assistant -> Board Type -> SG90舵机语音控制板（一般在最后一个）
+# 然后依次选择：Xiaozhi Assistant -> Board Type -> 面包板紧凑型WiFi舵机控制板
 ```
 
 **第三步：编译固件**
