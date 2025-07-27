@@ -3,30 +3,23 @@
 
 #include <driver/gpio.h>
 
-// 音频配置
 #define AUDIO_INPUT_SAMPLE_RATE  16000
 #define AUDIO_OUTPUT_SAMPLE_RATE 24000
 
-// 使用 Simplex I2S 模式（麦克风输入 + 可选扬声器输出）
+// 如果使用 Duplex I2S 模式，请注释下面一行
 #define AUDIO_I2S_METHOD_SIMPLEX
 
 #ifdef AUDIO_I2S_METHOD_SIMPLEX
 
-// 麦克风输入引脚 (INMP441)
-// ESP32-S3 ↔ INMP441: GPIO4(WS), GPIO5(SCK), GPIO6(SD)
 #define AUDIO_I2S_MIC_GPIO_WS   GPIO_NUM_4
 #define AUDIO_I2S_MIC_GPIO_SCK  GPIO_NUM_5
 #define AUDIO_I2S_MIC_GPIO_DIN  GPIO_NUM_6
-
-// 扬声器输出引脚 (MAX98357A)
-// ESP32-S3 ↔ MAX98357A: GPIO7(DIN), GPIO15(BCLK), GPIO16(LRC)
 #define AUDIO_I2S_SPK_GPIO_DOUT GPIO_NUM_7
 #define AUDIO_I2S_SPK_GPIO_BCLK GPIO_NUM_15
 #define AUDIO_I2S_SPK_GPIO_LRCK GPIO_NUM_16
 
 #else
 
-// Duplex I2S 模式引脚
 #define AUDIO_I2S_GPIO_WS GPIO_NUM_4
 #define AUDIO_I2S_GPIO_BCLK GPIO_NUM_5
 #define AUDIO_I2S_GPIO_DIN  GPIO_NUM_6
@@ -34,26 +27,26 @@
 
 #endif
 
-// 控制按钮引脚
+
+#define BUILTIN_LED_GPIO        GPIO_NUM_48
 #define BOOT_BUTTON_GPIO        GPIO_NUM_0
-#define TOUCH_BUTTON_GPIO       GPIO_NUM_5
-#define ASR_BUTTON_GPIO         GPIO_NUM_19
+#define TOUCH_BUTTON_GPIO       GPIO_NUM_47
+#define VOLUME_UP_BUTTON_GPIO   GPIO_NUM_40
+#define VOLUME_DOWN_BUTTON_GPIO GPIO_NUM_39
 
-// 状态指示LED
-#define BUILTIN_LED_GPIO        GPIO_NUM_2
-
-// 显示屏引脚（可选OLED）
-#define DISPLAY_SDA_PIN GPIO_NUM_4
-#define DISPLAY_SCL_PIN GPIO_NUM_15
+#define DISPLAY_SDA_PIN GPIO_NUM_41
+#define DISPLAY_SCL_PIN GPIO_NUM_42
 #define DISPLAY_WIDTH   128
 
 #if CONFIG_OLED_SSD1306_128X32
 #define DISPLAY_HEIGHT  32
 #elif CONFIG_OLED_SSD1306_128X64
 #define DISPLAY_HEIGHT  64
-#else
-// 默认使用64像素高度，如果没有显示屏则在代码中处理
+#elif CONFIG_OLED_SH1106_128X64
 #define DISPLAY_HEIGHT  64
+#define SH1106
+#else
+#error "未选择 OLED 屏幕类型"
 #endif
 
 #define DISPLAY_MIRROR_X true
