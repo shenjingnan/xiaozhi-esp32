@@ -9,7 +9,6 @@
 #include <string>
 #include <mutex>
 #include <deque>
-#include <vector>
 #include <memory>
 
 #include "protocol.h"
@@ -41,6 +40,7 @@ public:
     Application& operator=(const Application&) = delete;
 
     void Start();
+    void MainEventLoop();
     DeviceState GetDeviceState() const { return device_state_; }
     bool IsVoiceDetected() const { return audio_service_.IsVoiceDetected(); }
     void Schedule(std::function<void()> callback);
@@ -80,7 +80,6 @@ private:
     int clock_ticks_ = 0;
     TaskHandle_t check_new_version_task_handle_ = nullptr;
 
-    void MainEventLoop();
     void OnWakeWordDetected();
     void CheckNewVersion(Ota& ota);
     void ShowActivationCode(const std::string& code, const std::string& message);
