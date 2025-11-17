@@ -436,7 +436,7 @@ choice BOARD_TYPE
         bool "AIPI-Lite"
         depends on IDF_TARGET_ESP32S3
     config BOARD_TYPE_BREAD_COMPACT_WIFI_WITH_SERVO
-        bool "面包板紧凑型WiFi舵机控制板"
+        bool "Bread Compact ESP32 DevKit With Servo（面包板紧凑型WiFi舵机控制板）"
         depends on IDF_TARGET_ESP32S3
 endchoice
 
