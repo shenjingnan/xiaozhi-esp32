@@ -143,7 +143,7 @@ static uint8_t* convert_input_to_encoder_buf(const uint8_t* src, uint16_t width,
                 src_len = static_cast<uint32_t>(width * height * 2);
                 break;
             [[unlikely]] default:
-                ESP_LOGE(TAG, "[Unreachable Case] unsupported format: 0x%08x", format);
+                ESP_LOGE(TAG, "[Unreachable Case] unsupported format: 0x%08lx", format);
                 std::unreachable();
         }
         int sz = (int)width * (int)height * 2;
@@ -186,7 +186,7 @@ static uint8_t* convert_input_to_encoder_buf(const uint8_t* src, uint16_t width,
             *out_size = sz;
         return buf;
     }
-    ESP_LOGE(TAG, "unsupported format: 0x%08x", format);
+    ESP_LOGE(TAG, "unsupported format: 0x%08lx", format);
     if (out_size)
         *out_size = 0;
     return nullptr;
@@ -426,6 +426,19 @@ static bool encode_with_esp_new_jpeg(const uint8_t* src, size_t src_len, uint16_
 
 bool image_to_jpeg(uint8_t* src, size_t src_len, uint16_t width, uint16_t height, v4l2_pix_fmt_t format,
                    uint8_t quality, uint8_t** out, size_t* out_len) {
+#ifdef CONFIG_XIAOZHI_CAMERA_ALLOW_JPEG_INPUT
+    if (format == V4L2_PIX_FMT_JPEG) {
+        uint8_t * out_data = (uint8_t*)heap_caps_malloc(src_len, MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT);
+        if (!out_data) {
+            ESP_LOGE(TAG, "Failed to allocate memory for JPEG output");
+            return false;
+        }
+        memcpy(out_data, src, src_len);
+        *out = out_data;
+        *out_len = src_len;
+        return true;
+    }
+#endif // CONFIG_XIAOZHI_CAMERA_ALLOW_JPEG_INPUT
 #if CONFIG_XIAOZHI_ENABLE_HARDWARE_JPEG_ENCODER
     if (encode_with_hw_jpeg(src, src_len, width, height, format, quality, out, out_len, NULL, NULL)) {
         return true;
@@ -437,6 +450,13 @@ bool image_to_jpeg(uint8_t* src, size_t src_len, uint16_t width, uint16_t height
 
 bool image_to_jpeg_cb(uint8_t* src, size_t src_len, uint16_t width, uint16_t height, v4l2_pix_fmt_t format,
                       uint8_t quality, jpg_out_cb cb, void* arg) {
+#ifdef CONFIG_XIAOZHI_CAMERA_ALLOW_JPEG_INPUT
+    if (format == V4L2_PIX_FMT_JPEG) {
+        cb(arg, 0, src, src_len);
+        cb(arg, 1, nullptr, 0); // end signal
+        return true;
+    }
+#endif // CONFIG_XIAOZHI_CAMERA_ALLOW_JPEG_INPUT
 #if CONFIG_XIAOZHI_ENABLE_HARDWARE_JPEG_ENCODER
     if (encode_with_hw_jpeg(src, src_len, width, height, format, quality, NULL, NULL, cb, arg)) {
         return true;
