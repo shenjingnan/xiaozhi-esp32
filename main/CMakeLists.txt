@@ -158,6 +158,17 @@ elseif(CONFIG_BOARD_TYPE_LICHUANG_DEV_C3)
     set(BUILTIN_TEXT_FONT font_puhui_basic_20_4)
     set(BUILTIN_ICON_FONT font_awesome_20_4)
     set(DEFAULT_EMOJI_COLLECTION twemoji_32)
+elseif(CONFIG_BOARD_TYPE_EDA_TV_PRO)
+    set(MANUFACTURER "lceda-course-examples")
+    set(BOARD_TYPE "eda-tv-pro")    
+elseif(CONFIG_BOARD_TYPE_EDA_ROBOT_PRO)
+    set(MANUFACTURER "lceda-course-examples")
+    set(BOARD_TYPE "eda-robot-pro")
+    set(BUILTIN_TEXT_FONT font_puhui_16_4)
+    set(BUILTIN_ICON_FONT font_awesome_16_4)
+elseif(CONFIG_BOARD_TYPE_EDA_SUPER_BEAR)
+    set(MANUFACTURER "lceda-course-examples")
+    set(BOARD_TYPE "eda-super-bear")
 elseif(CONFIG_BOARD_TYPE_MAGICLICK_S3_2P4)
     set(BOARD_TYPE "magiclick-2p4")
     set(BUILTIN_TEXT_FONT font_puhui_basic_16_4)
@@ -696,17 +707,17 @@ elseif(CONFIG_BOARD_TYPE_BREAD_COMPACT_WIFI_WITH_SERVO)
     set(BOARD_TYPE "bread-compact-wifi-with-servo")
 endif()
 
-file(GLOB BOARD_SOURCES
 if(MANUFACTURER)
-    ${CMAKE_CURRENT_SOURCE_DIR}/boards/${MANUFACTURER}/${BOARD_TYPE}/*.cc
-    ${CMAKE_CURRENT_SOURCE_DIR}/boards/${MANUFACTURER}/${BOARD_TYPE}/*.c
-else
-    ${CMAKE_CURRENT_SOURCE_DIR}/boards/${BOARD_TYPE}/*.cc
-    ${CMAKE_CURRENT_SOURCE_DIR}/boards/${BOARD_TYPE}/*.c
+    file(GLOB BOARD_SOURCES
+        ${CMAKE_CURRENT_SOURCE_DIR}/boards/${MANUFACTURER}/${BOARD_TYPE}/*.cc
+        ${CMAKE_CURRENT_SOURCE_DIR}/boards/${MANUFACTURER}/${BOARD_TYPE}/*.c
+    )
+else()
+    file(GLOB BOARD_SOURCES
+        ${CMAKE_CURRENT_SOURCE_DIR}/boards/${BOARD_TYPE}/*.cc
+        ${CMAKE_CURRENT_SOURCE_DIR}/boards/${BOARD_TYPE}/*.c
+    )
 endif()
-
-    
-)
 list(APPEND SOURCES ${BOARD_SOURCES})
 
 # Select audio processor according to Kconfig
